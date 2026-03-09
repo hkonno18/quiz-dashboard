@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kintoneアソシエイト 学習ダッシュボード</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;--accent:#3b82f6;--accent2:#06b6d4;--gold:#f59e0b;--green:#10b981;--red:#ef4444;--purple:#8b5cf6;--text:#e2e8f0;--text2:#94a3b8;--text3:#475569;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:"Noto Sans JP",sans-serif;min-height:100vh;}
+body::before{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(59,130,246,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+.header{padding:1.5rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:relative;}
+.header::after{content:"";position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent);}
+.h-title{font-size:1.4rem;font-weight:900;background:linear-gradient(135deg,#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.h-sub{font-size:.7rem;color:var(--text3);margin-top:.2rem;font-family:"DM Mono",monospace;}
+.badge{background:linear-gradient(135deg,var(--accent),var(--accent2));padding:.35rem .9rem;border-radius:100px;font-size:.7rem;font-weight:700;color:#fff;}
+.main{padding:1.5rem 2rem;max-width:1400px;margin:0 auto;}
+.sec{font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);font-family:"DM Mono",monospace;margin-bottom:.6rem;}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.2rem;position:relative;overflow:hidden;}
+.kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi.blue::before{background:linear-gradient(90deg,var(--accent),var(--accent2));}
+.kpi.gold::before{background:linear-gradient(90deg,var(--gold),#fbbf24);}
+.kpi.green::before{background:linear-gradient(90deg,var(--green),#34d399);}
+.kpi.purple::before{background:linear-gradient(90deg,var(--purple),#a78bfa);}
+.kpi-lbl{font-size:.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-family:"DM Mono",monospace;}
+.kpi-val{font-size:2rem;font-weight:900;margin:.3rem 0 .1rem;line-height:1;}
+.kpi-sub{font-size:.68rem;color:var(--text2);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;}
+.grid3{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;}
+.ct{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;}
+.ct span{width:3px;height:13px;border-radius:2px;background:var(--accent);display:inline-block;}
+.cw{position:relative;height:210px;}
+.ri{display:flex;align-items:center;gap:1rem;padding:.7rem 0;border-bottom:1px solid var(--border);}
+.ri:last-child{border-bottom:none;}
+.rn{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:900;flex-shrink:0;}
+.r1{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#000;}
+.r2{background:linear-gradient(135deg,#94a3b8,#cbd5e1);color:#000;}
+.r3{background:linear-gradient(135deg,#b45309,#d97706);color:#000;}
+.ro{background:var(--surface2);color:var(--text3);}
+.rname{flex:1;font-size:.88rem;font-weight:500;}
+.rbw{flex:2;}
+.rbb{background:var(--surface2);border-radius:100px;height:5px;overflow:hidden;}
+.rb{height:100%;border-radius:100px;}
+.rst{display:flex;gap:.8rem;font-family:"DM Mono",monospace;font-size:.7rem;color:var(--text3);}
+.rscore{color:var(--text);font-weight:600;}
+.ins-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;}
+.ins{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.2rem;border-left:3px solid;}
+.ins.warn{border-left-color:var(--gold);}
+.ins.good{border-left-color:var(--green);}
+.ins.info{border-left-color:var(--accent);}
+.ins-em{font-size:1.3rem;margin-bottom:.4rem;}
+.ins-t{font-size:.7rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem;}
+.ins-b{font-size:.8rem;color:var(--text);line-height:1.6;}
+.ins-b strong{color:var(--accent2);}
+table{width:100%;border-collapse:collapse;}
+th{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-family:"DM Mono",monospace;padding:.45rem .7rem;text-align:left;border-bottom:1px solid var(--border);font-weight:500;}
+td{padding:.55rem .7rem;font-size:.8rem;border-bottom:1px solid rgba(30,45,69,.5);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface2);}
+.sb{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:5px;font-size:.72rem;font-weight:700;font-family:"DM Mono",monospace;}
+.s3{background:rgba(16,185,129,.2);color:var(--green);}
+.s2{background:rgba(59,130,246,.2);color:var(--accent);}
+.s1{background:rgba(245,158,11,.2);color:var(--gold);}
+.s0{background:rgba(239,68,68,.2);color:var(--red);}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="h-title">🏆 kintoneアソシエイト 学習ダッシュボード</div>
+    <div class="h-sub">仙台営業所 / 自動更新: 2026/03/09 08:57</div>
+  </div>
+  <div class="badge">AUTO UPDATE</div>
+</div>
+<div class="main" id="app"></div>
+<script>
+const data = [{"date": "2026-03-04", "name": "後藤 廉", "s1": 1, "s2": 0, "s3": 0, "total": 1, "rate": 33.3}, {"date": "2026-03-04", "name": "松田 耕平", "s1": 1, "s2": 0, "s3": 0, "total": 1, "rate": 33.3}, {"date": "2026-03-04", "name": "鈴木 涼夏", "s1": 1, "s2": 0, "s3": 0, "total": 1, "rate": 33.3}, {"date": "2026-03-04", "name": "芝野 杜香", "s1": 0, "s2": 1, "s3": 0, "total": 1, "rate": 33.3}, {"date": "2026-03-04", "name": "島谷 昇孝", "s1": 0, "s2": 1, "s3": 0, "total": 1, "rate": 33.3}, {"date": "2026-03-04", "name": "今野 滉也", "s1": 0, "s2": 0, "s3": 0, "total": 0, "rate": 0.0}, {"date": "2026-03-05", "name": "芝野 杜香", "s1": 1, "s2": 1, "s3": 1, "total": 3, "rate": 100.0}, {"date": "2026-03-05", "name": "千田 莉亜", "s1": 0, "s2": 0, "s3": 0, "total": 0, "rate": 0.0}, {"date": "2026-03-05", "name": "後藤 廉", "s1": 0, "s2": 1, "s3": 1, "total": 2, "rate": 66.7}, {"date": "2026-03-05", "name": "難波 夕季", "s1": 0, "s2": 1, "s3": 0, "total": 1, "rate": 33.3}, {"date": "2026-03-05", "name": "田澤 宏尚", "s1": 0, "s2": 0, "s3": 1, "total": 1, "rate": 33.3}, {"date": "2026-03-05", "name": "松田 耕平", "s1": 0, "s2": 1, "s3": 1, "total": 2, "rate": 66.7}, {"date": "2026-03-05", "name": "今野 滉也", "s1": 1, "s2": 0, "s3": 0, "total": 1, "rate": 33.3}, {"date": "2026-03-05", "name": "島谷 昇孝", "s1": 0, "s2": 1, "s3": 1, "total": 2, "rate": 66.7}, {"date": "2026-03-06", "name": "田澤 宏尚", "s1": 0, "s2": 0, "s3": 1, "total": 1, "rate": 33.3}, {"date": "2026-03-06", "name": "芝野 杜香", "s1": 1, "s2": 1, "s3": 0, "total": 2, "rate": 66.7}, {"date": "2026-03-06", "name": "鈴木 涼夏", "s1": 1, "s2": 0, "s3": 1, "total": 2, "rate": 66.7}, {"date": "2026-03-06", "name": "島谷 昇孝", "s1": 1, "s2": 1, "s3": 0, "total": 2, "rate": 66.7}, {"date": "2026-03-06", "name": "今野 滉也", "s1": 0, "s2": 0, "s3": 0, "total": 0, "rate": 0.0}, {"date": "2026-03-07", "name": "吉松 幸貴", "s1": 0, "s2": 0, "s3": 0, "total": 0, "rate": 0.0}, {"date": "2026-03-09", "name": "鈴木 涼夏", "s1": 1, "s2": 1, "s3": 1, "total": 3, "rate": 100.0}, {"date": "2026-03-09", "name": "芝野 杜香", "s1": 1, "s2": 1, "s3": 1, "total": 3, "rate": 100.0}, {"date": "2026-03-09", "name": "島谷 昇孝", "s1": 1, "s2": 1, "s3": 1, "total": 3, "rate": 100.0}, {"date": "2026-03-09", "name": "今野 滉也", "s1": 0, "s2": 1, "s3": 1, "total": 2, "rate": 66.7}, {"date": "2026-03-09", "name": "松田 耕平", "s1": 0, "s2": 1, "s3": 1, "total": 2, "rate": 66.7}];
+
+// 集計
+const members = {};
+data.forEach(r => {
+  if(!members[r.name]) members[r.name]={total:0,count:0,rates:[]};
+  members[r.name].total+=r.total;
+  members[r.name].count++;
+  members[r.name].rates.push(r.rate);
+});
+const ml = Object.entries(members).map(([n,v])=>({
+  name:n,total:v.total,count:v.count,
+  avgRate:Math.round(v.rates.reduce((a,b)=>a+b,0)/v.rates.length)
+})).sort((a,b)=>b.total-a.total||b.avgRate-a.avgRate);
+
+const byDate={};
+data.forEach(r=>{
+  if(!r.date)return;
+  if(!byDate[r.date])byDate[r.date]={rates:[],count:0};
+  byDate[r.date].rates.push(r.rate);
+  byDate[r.date].count++;
+});
+const dates=Object.keys(byDate).sort();
+const dlabels=dates.map(d=>d.slice(5).replace('-','/'));
+const davg=dates.map(d=>Math.round(byDate[d].rates.reduce((a,b)=>a+b,0)/byDate[d].rates.length));
+const dpart=dates.map(d=>byDate[d].count);
+
+const totalC=data.reduce((a,r)=>a+r.total,0);
+const overallRate=data.length>0?Math.round(totalC/(data.length*3)*100):0;
+const topR=[...data].sort((a,b)=>b.total-a.total)[0];
+const scoreDist=[0,0,0,0];
+data.forEach(r=>scoreDist[Math.min(r.total,3)]++);
+const COLORS=['#f59e0b','#3b82f6','#10b981','#8b5cf6','#ef4444','#06b6d4','#ec4899','#84cc16','#fb923c','#a3e635'];
+const maxT=ml[0]?.total||1;
+
+const rankHTML=ml.map((m,i)=>{
+  const cls=i===0?'r1':i===1?'r2':i===2?'r3':'ro';
+  const bc=i===0?'#f59e0b':i===1?'#94a3b8':i===2?'#d97706':'#3b82f6';
+  const pct=Math.round((m.total/maxT)*100);
+  return `<div class="ri"><div class="rn ${cls}">${i+1}</div><div class="rname">${m.name}</div><div class="rbw"><div class="rbb"><div class="rb" style="width:${pct}%;background:${bc}"></div></div></div><div class="rst"><span class="rscore">${m.total}点</span><span>avg ${m.avgRate}%</span><span>${m.count}回</span></div></div>`;
+}).join('');
+
+const tableHTML=[...data].reverse().map(r=>{
+  const sc=n=>`<span class="sb s${n}">${n}</span>`;
+  const rc=r.rate>=67?'var(--green)':r.rate>=34?'var(--gold)':'var(--red)';
+  return `<tr><td style="font-family:'DM Mono',monospace;color:var(--text2)">${r.date?r.date.slice(5).replace('-','/'):'?'}</td><td style="font-weight:500">${r.name}</td><td>${sc(r.s1)}</td><td>${sc(r.s2)}</td><td>${sc(r.s3)}</td><td style="font-weight:700;font-family:'DM Mono',monospace">${r.total}/3</td><td style="color:${rc};font-family:'DM Mono',monospace;font-weight:600">${r.rate}%</td></tr>`;
+}).join('');
+
+const firstRate=davg[0]||0;
+const lastRate=davg[davg.length-1]||0;
+const perfectCount=data.filter(r=>r.total===3).length;
+const lowestM=[...ml].sort((a,b)=>a.avgRate-b.avgRate)[0];
+
+document.getElementById('app').innerHTML=`
+<div class="sec">── サマリー</div>
+<div class="kpi-grid">
+  <div class="kpi blue"><div class="kpi-lbl">総回答数</div><div class="kpi-val" style="color:var(--accent)">${data.length}</div><div class="kpi-sub">集計対象</div></div>
+  <div class="kpi gold"><div class="kpi-lbl">実施日数</div><div class="kpi-val" style="color:var(--gold)">${dates.length}</div><div class="kpi-sub">${dates.length>0?dlabels[0]+'〜'+dlabels[dlabels.length-1]:'−'}</div></div>
+  <div class="kpi green"><div class="kpi-lbl">全体正答率</div><div class="kpi-val" style="color:var(--green)">${overallRate}%</div><div class="kpi-sub">総正解/総問題数</div></div>
+  <div class="kpi purple"><div class="kpi-lbl">トップスコア</div><div class="kpi-val" style="color:var(--purple);font-size:1.2rem">${topR?topR.name:'−'}</div><div class="kpi-sub">${topR?topR.total+'点（'+topR.date.slice(5).replace('-','/')+'）':'−'}</div></div>
+</div>
+<div class="sec">── グラフ分析</div>
+<div class="grid2">
+  <div class="card"><div class="ct"><span></span>メンバー別 累計正解数</div><div class="cw"><canvas id="c1"></canvas></div></div>
+  <div class="card"><div class="ct"><span></span>日別 平均正答率の推移</div><div class="cw"><canvas id="c2"></canvas></div></div>
+</div>
+<div class="grid3">
+  <div class="card"><div class="ct"><span></span>メンバー別 平均正答率</div><div class="cw"><canvas id="c3"></canvas></div></div>
+  <div class="card"><div class="ct"><span></span>スコア分布</div><div class="cw"><canvas id="c4"></canvas></div></div>
+  <div class="card"><div class="ct"><span></span>日別 参加人数</div><div class="cw"><canvas id="c5"></canvas></div></div>
+</div>
+<div class="sec">── 累計ランキング</div>
+<div class="card" style="margin-bottom:1.5rem">${rankHTML}</div>
+<div class="sec">── 分析インサイト</div>
+<div class="ins-grid">
+  <div class="ins ${overallRate>=50?'good':'warn'}"><div class="ins-em">${overallRate>=50?'📈':'⚠️'}</div><div class="ins-t">全体正答率</div><div class="ins-b">全体正答率は<strong>${overallRate}%</strong>。${overallRate>=67?'良好なペースです！':overallRate>=40?'もう一息！':'複数選択問題の対策が必要です。'}</div></div>
+  <div class="ins ${lastRate>firstRate?'good':'info'}"><div class="ins-em">${lastRate>firstRate?'🚀':'📊'}</div><div class="ins-t">スコア推移</div><div class="ins-b">初日<strong>${firstRate}%</strong>→最新<strong>${lastRate}%</strong>。${lastRate>firstRate?'着実に上昇中🎉':'解説の共有が効果的かも。'}</div></div>
+  <div class="ins good"><div class="ins-em">🏆</div><div class="ins-t">トップパフォーマー</div><div class="ins-b"><strong>${ml[0]?.name||'−'}</strong>が累計<strong>${ml[0]?.total||0}点</strong>でリード。満点は全体で<strong>${perfectCount}回</strong>達成。</div></div>
+  <div class="ins info"><div class="ins-em">👥</div><div class="ins-t">参加状況</div><div class="ins-b"><strong>${dates.length}日間</strong>実施、1日平均<strong>${Math.round(data.length/Math.max(dates.length,1))}名</strong>参加。継続がカギです。</div></div>
+  <div class="ins ${lowestM?.avgRate<34?'warn':'info'}"><div class="ins-em">💡</div><div class="ins-t">フォローアップ</div><div class="ins-b"><strong>${lowestM?.name||'−'}</strong>の平均正答率<strong>${lowestM?.avgRate||0}%</strong>。朝の解説シェアが効果的です。</div></div>
+  <div class="ins info"><div class="ins-em">🎯</div><div class="ins-t">入力フォーマット</div><div class="ins-b">複数選択は<strong>「A,B,C」形式</strong>で入力。入力ミスによる不正解に注意。</div></div>
+</div>
+<div class="sec">── 全回答一覧</div>
+<div class="card"><table><thead><tr><th>回答日</th><th>メンバー</th><th>問1</th><th>問2</th><th>問3</th><th>合計</th><th>正答率</th></tr></thead><tbody>${tableHTML}</tbody></table></div>
+`;
+
+Chart.defaults.color='#94a3b8';
+Chart.defaults.font.family="'DM Mono',monospace";
+Chart.defaults.font.size=11;
+
+new Chart(document.getElementById('c1'),{type:'bar',data:{labels:ml.map(m=>m.name),datasets:[{data:ml.map(m=>m.total),backgroundColor:ml.map((_,i)=>COLORS[i%COLORS.length]+'99'),borderColor:ml.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:1.5,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#1e2d45'},ticks:{maxRotation:30,font:{size:10}}},y:{grid:{color:'#1e2d45'},beginAtZero:true,ticks:{stepSize:1}}}}});
+new Chart(document.getElementById('c2'),{type:'line',data:{labels:dlabels,datasets:[{data:davg,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.1)',borderWidth:2.5,pointBackgroundColor:'#06b6d4',pointRadius:5,tension:0.3,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#1e2d45'}},y:{grid:{color:'#1e2d45'},min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
+new Chart(document.getElementById('c3'),{type:'bar',data:{labels:ml.map(m=>m.name),datasets:[{data:ml.map(m=>m.avgRate),backgroundColor:ml.map(m=>m.avgRate>=67?'rgba(16,185,129,0.7)':m.avgRate>=40?'rgba(59,130,246,0.7)':'rgba(239,68,68,0.6)'),borderColor:ml.map(m=>m.avgRate>=67?'#10b981':m.avgRate>=40?'#3b82f6':'#ef4444'),borderWidth:1.5,borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#1e2d45'},min:0,max:100,ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+new Chart(document.getElementById('c4'),{type:'doughnut',data:{labels:['0点','1点','2点','3点'],datasets:[{data:scoreDist,backgroundColor:['rgba(239,68,68,0.8)','rgba(245,158,11,0.8)','rgba(59,130,246,0.8)','rgba(16,185,129,0.8)'],borderColor:['#ef4444','#f59e0b','#3b82f6','#10b981'],borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:12,font:{size:11}}}},cutout:'65%'}});
+new Chart(document.getElementById('c5'),{type:'bar',data:{labels:dlabels,datasets:[{data:dpart,backgroundColor:'rgba(139,92,246,0.7)',borderColor:'#8b5cf6',borderWidth:1.5,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#1e2d45'}},y:{grid:{color:'#1e2d45'},beginAtZero:true,ticks:{stepSize:1}}}}});
+</script>
+</body>
+</html>
