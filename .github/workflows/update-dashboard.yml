@@ -1,0 +1,36 @@
+name: Update Dashboard
+
+on:
+  schedule:
+    - cron: '0 0 * * 1-5'  # 平日9時（日本時間）= UTC 0時
+  workflow_dispatch:         # 手動実行も可能
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate dashboard
+        env:
+          KINTONE_API_TOKEN: ${{ secrets.KINTONE_API_TOKEN }}
+        run: python generate.py
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
